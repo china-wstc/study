@@ -30,10 +30,10 @@ class EtherHeader(object):
 class ArpProtocol(object):
   def __init__(self):
     # 2Byte 硬件类型
-    self.arp_hardware = 0x0800
+    self.arp_hardware = 0x0001
 
     # 2Byte 协议类型
-    self.arp_protocol = 0x0001
+    self.arp_protocol = 0x0800
 
     # 1Byte 硬件地址长度
     self.arp_haddr_len = 6
@@ -89,4 +89,65 @@ class ArpProtocol(object):
         utils.eth_atob(self.arp_eth_dest) + \
         socket.inet_aton(self.arp_ip_dest)
 
+class RarpProtocol(object):
+  def __init__(self):
+    # 2Byte 硬件类型
+    self.rarp_hardware = 0x0001
+
+    # 2Byte 协议类型
+    self.rarp_protocol = 0x0800
+
+    # 1Byte 硬件地址长度
+    self.rarp_haddr_len = 6
+
+    # 1Byte 协议地址长度
+    self.rarp_paddr_len = 4
+
+    # 2Byte 操作类型
+    self.rarp_oper = 0
+
+    # 6Byte 源地址
+    self.rarp_eth_src = ''
+    # 4Byte 源IP
+    self.rarp_ip_src = ''
+    # 6Byte 目标地址
+    self.rarp_eth_dest = ''
+    # 4Byte 目的IP
+    self.rarp_ip_dest = ''
+    return
+
+  def __str__(self):
+    return 'ArpProtocol: ' + \
+           ', '.join(('hardware: %d' % self.rarp_hardware,
+                      'protocol: %s' % hex(self.rarp_protocol),
+                      'haddr_len: %d' % self.rarp_haddr_len,
+                      'paddr_len: %d' % self.rarp_paddr_len,
+                      'oper: %d' % self.rarp_oper,
+                      'eth_src: %s' % self.rarp_eth_src,
+                      'ip_src: %s' % self.rarp_ip_src,
+                      'eth_dest: %s' % self.rarp_eth_dest,
+                      'ip_dect: %s' % self.rarp_ip_dest,
+                     ))
+
+  def __eq__(self, other):
+    for k, v in self.__dict__.items():
+      if k.startswith('rarp_') and v != other.__dict__[k]:
+        return False
+    return True
+
+  def unpack(self, buff):
+    self.rarp_hardware, self.rarp_protocol, self.rarp_haddr_len, self.rarp_paddr_len, self.rarp_oper = \
+        struct.unpack(">HHBBH", buff[: 8])
+    self.rarp_eth_src = utils.eth_btoa(buff[8: 14])
+    self.rarp_ip_src = socket.inet_ntoa(buff[14: 18])
+
+    self.rarp_eth_dest = utils.eth_btoa(buff[18: 24])
+    self.rarp_ip_dest = socket.inet_ntoa(buff[24: 28])
+
+  def pack(self):
+    return struct.pack('>HHBBH', self.rarp_hardware, self.rarp_protocol, self.rarp_haddr_len, self.rarp_paddr_len, self.rarp_oper) + \
+        utils.eth_atob(self.rarp_eth_src) + \
+        socket.inet_aton(self.rarp_ip_src) + \
+        utils.eth_atob(self.rarp_eth_dest) + \
+        socket.inet_aton(self.rarp_ip_dest)
 
