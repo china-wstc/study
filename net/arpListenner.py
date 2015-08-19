@@ -27,6 +27,28 @@ def InitArpRequest(dest_ip):
 
   return (eth, arp)
 
+def InitArpResponse(ipSrc, ethSrc, ipDest, ethDest):
+  eth = protocol.EtherHeader()
+  eth.ether_dhost = ethDest
+  eth.ether_shost = ethSrc
+  eth.ether_type  = 0x0806
+
+  arp = protocol.ArpProtocol()
+  arp.arp_hardware  = 0x0001
+  arp.arp_protocol  = 0x0800
+  arp.arp_haddr_len = 0x06
+  arp.arp_paddr_len = 0x04
+  arp.arp_oper      = 0x0001
+
+  arp.arp_eth_src   = ethSrc
+  arp.arp_ip_src    = ipSrc
+  arp.arp_eth_dest  = ethDest
+  arp.arp_ip_dest   = ipDest
+
+  return (eth, arp)
+
+
+
 ARP_TABLE = {}
 
 def ArpResp(arp):
@@ -50,22 +72,51 @@ def ListenArp():
     arp.unpack(buff[14: ])
     if arp.arp_oper == 2:
       ArpResp(arp)
+  return
 
-def main():
+def BuildArpTable():
   sock = socket.socket(socket.AF_PACKET, socket.SOCK_RAW)
   sock.bind(("eth0", 0x0806))
 
-  for i in range(255):
-    eth, arp = InitArpRequest("192.168.11.%s" % i)
-    data = eth.pack() + arp.pack() + chr(0) * 18
-    sock.send(data)
-    time.sleep(1)
-
+  sleep = 1
   while True:
-    time.sleep(1)
+    for i in range(255):
+      eth, arp = InitArpRequest("192.168.11.%s" % i)
+      data = eth.pack() + arp.pack() + chr(0) * 18
+      sock.send(data)
+      time.sleep(sleep / 10.0)
+    if sleep == 1:
+      sleep += 10
   return
 
-thread = threading.Thread(target = ListenArp)
-thread.setDaemon(True)
-thread.start()
+def Runingbg(func, *args, **kwargs):
+  thread = threading.Thread(target = func, *args, **kwargs)
+  thread.setDaemon(True)
+  thread.start()
+
+
+def MakeBlind(src_ip, dest_ip):
+  sock = socket.socket(socket.AF_PACKET, socket.SOCK_RAW)
+  sock.bind(("eth0", 0x0806))
+  while True:
+    time.sleep(2)
+    if src_ip not in ARP_TABLE or dest_ip not in ARP_TABLE:
+      continue
+    src_eth = ARP_TABLE[src_ip]
+    dest_eth = ARP_TABLE[dest_ip]
+
+    eth, arp = InitArpResponse(dest_ip, dest_eth, src_ip, src_eth)
+
+    print 'make bind', src_ip, dest_ip
+    sock.send(eth.pack() + arp.pack() + chr(0) * 18)
+
+
+def main():
+  MakeBlind("192.168.11.23", "192.168.11.140")
+  while True:
+    time.sleep(1)
+
+Runingbg(BuildArpTable)
+Runingbg(ListenArp)
+
 main()
