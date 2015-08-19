@@ -77,10 +77,10 @@ class ArpProtocol(object):
     self.arp_hardware, self.arp_protocol, self.arp_haddr_len, self.arp_paddr_len, self.arp_oper = \
         struct.unpack(">HHBBH", buff[: 8])
     self.arp_eth_src = utils.eth_btoa(buff[8: 14])
-    self.arp_ip_src = utils.inet_btoa(buff[14: 18])
+    self.arp_ip_src = socket.inet_ntoa(buff[14: 18])
 
     self.arp_eth_dest = utils.eth_btoa(buff[18: 24])
-    self.arp_ip_dest = utils.inet_btoa(buff[24: 28])
+    self.arp_ip_dest = socket.inet_ntoa(buff[24: 28])
 
   def pack(self):
     return struct.pack('>HHBBH', self.arp_hardware, self.arp_protocol, self.arp_haddr_len, self.arp_paddr_len, self.arp_oper) + \

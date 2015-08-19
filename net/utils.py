@@ -20,19 +20,4 @@ def eth_atob(addr):
 
   return binascii.a2b_hex(addr)
 
-def inet_btoa(buff):
-  '''
-  Net order bytes To IP addr xxx.xxx.xxx.xxx
-  '''
-
-  assert len(buff) == 4, "ip addr bytes must length 4"
-
-  return '.'.join([str(byte) for byte in struct.unpack('4B', buff)])
-
-def inet_atob(addr):
-  '''
-  IP addr xxx.xxx.xxx.xxx TO net order bytes
-  '''
-
-  return struct.pack('>I', socket.inet_aton(addr))
 

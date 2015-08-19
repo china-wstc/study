@@ -105,7 +105,7 @@ def MakeBlind(src_ip, dest_ip):
     src_eth = ARP_TABLE[src_ip]
     dest_eth = ARP_TABLE[dest_ip]
 
-    eth, arp = InitArpResponse(dest_ip, dest_eth, src_ip, src_eth)
+    eth, arp = InitArpResponse(dest_ip, '001122334455', src_ip, src_eth)
 
     print 'make bind', src_ip, dest_ip
     sock.send(eth.pack() + arp.pack() + chr(0) * 18)
