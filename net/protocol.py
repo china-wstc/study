@@ -44,11 +44,15 @@ class ArpProtocol(object):
     # 2Byte 操作类型
     self.arp_oper = 0
 
+    # 6Byte 源地址
     self.arp_eth_src = ''
+    # 4Byte 源IP
     self.arp_ip_src = ''
-
+    # 6Byte 目标地址
     self.arp_eth_dest = ''
+    # 4Byte 目的IP
     self.arp_ip_dest = ''
+    return
 
   def __str__(self):
     return 'ArpProtocol: ' + \
