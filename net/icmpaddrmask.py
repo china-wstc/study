@@ -12,6 +12,7 @@ import time
 def main():
   sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
 
+  sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
   callid = 1
   while True:
     iam = icmp.IcmpAddrMask()
@@ -22,7 +23,7 @@ def main():
     iam.i_checksum = iam._checksum()
     print iam, hex(iam._checksum())
 
-    sock.sendto(iam.pack(), ("192.168.11.140",1))
+    sock.sendto(iam.pack(), ("192.168.11.255", 1))
 
     data, addr = sock.recvfrom(2048)
 
