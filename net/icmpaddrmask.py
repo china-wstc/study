@@ -22,7 +22,7 @@ def main():
     iam.i_checksum = iam._checksum()
     print iam, hex(iam._checksum())
 
-    sock.sendto(iam.pack(), ("192.168.1.200", 0))
+    sock.sendto(iam.pack(), ("192.168.11.140",1))
 
     data, addr = sock.recvfrom(2048)
 

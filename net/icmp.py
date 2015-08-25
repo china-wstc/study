@@ -19,6 +19,7 @@ class ICMP(object):
                                  'i_code: %d' % self.i_code,
                                  'i_checksum: %s' % hex(self.i_checksum)))
 
+
   def unpack(self, buff):
     self.i_type, self.i_code, self.i_checksum = \
         struct.unpack('>BBH', buff[:4])
@@ -42,30 +43,38 @@ class IcmpAddrMask(ICMP):
       return (~num) & 0xFFFF
 
     # little endian
-    csum = _s(self.i_type | (self.i_code << 8))
+    csum = _s(self.i_type << 8)
+    csum += _s(self.i_checksum)
 
-    csum +=  _s(self.i_checksum)
     csum = (csum >> 16) + (csum & 0xFFFF)
-
     csum += _s(self.i_token >> 16)
 
     csum = (csum >> 16) + (csum & 0xFFFF)
-
     csum += _s(self.i_token & 0xFFFF)
 
     csum = (csum >> 16) + (csum & 0xFFFF)
 
     csum += _s(self.i_mask >> 16)
-
     csum = (csum >> 16) + (csum & 0xFFFF)
 
     csum += _s(self.i_mask & 0xFFFF)
-
     csum = (csum >> 16) + (csum & 0xFFFF)
     return csum
 
+  def _pack(self):
+    buff = self._pack()
+    csum = 0
+    for num in struct.unpack('>%sH' % (len(buff) / 2), buff):
+      csum += num
+      csum = (csum >> 16) + (csum & 0xFFFF)
+    csum = (~csum) & 0xFFFF
+
+    print 'check sum2 ', csum
+    return
+
   def pack(self):
     self.i_checksum = self._checksum()
+    print 'check sum ', self._checksum()
     return struct.pack('>BBHII', self.i_type, self.i_code, self.i_checksum, self.i_token, self.i_mask)
 
   def unpack(self, buff):
