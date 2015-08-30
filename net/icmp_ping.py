@@ -31,28 +31,27 @@ def IcmpListener():
     if not icmp.unpack(data):
       continue
 
-    if icmp.i_type != protocol.ICMP.ICMP_TYPE_ADDR_MASK_RES and \
-        icmp.i_type != protocol.ICMP.ICMP_TYPE_ADDR_MASK_REQ:
-      print 'not icmp addr mask', icmp.i_type
+    if icmp.i_type != protocol.ICMP.ICMP_TYPE_PING_RES:
+      print 'not icmp ping res', icmp.i_type
       continue
-    imsk = protocol.IcmpAddrMask()
-    if not imsk.unpack(data):
+    iping = protocol.IcmpPing()
+    if not iping.unpack(data):
       continue
-
-    print 'receive ', ipHdr, imsk
+    print 'receive ', ipHdr, iping
+    print '  --ns: %d' % ((int(time.time() * 1000) & 0xFFFFFFFF) - iping.i_data)
   return
 
 def IcmpSender():
   sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
   sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
-  iam = protocol.IcmpAddrMask()
-  iam.i_type = 17
-  iam.i_seqid = os.getpid()
-  iam.i_mask = 0
+  iam = protocol.IcmpPing()
+  iam.i_type = protocol.ICMP.ICMP_TYPE_PING_REQ
+  iam.i_mark = os.getpid()
   while True:
-    iam.i_mark += 1
-    sock.sendto(iam.pack(), ("192.168.11.255", 1))
+    iam.i_seqid += 1
+    iam.i_data = int(time.time() * 1000) & 0xFFFFFFFF
+    sock.sendto(iam.pack(), ("180.97.33.108", 1))
     time.sleep(5)
   return
 
