@@ -30,7 +30,13 @@ class IpHeader(object):
     # 2 Byte 唯一标识
     self.uid = 0
 
-    # 2 Byte 片偏移
+    # 3 Bit [R|DF|MF] 分片标志
+    # R:  保留未用
+    # DF: Don’t Fragment, 不分片位，如果将这一比特置1，IP 层将不对数据报进行分片
+    # MF：More Fragment, 更多的片，除了最后一片外，其它每个组成数据报的片都要把比特置1
+    self.fragment_flag = 0
+
+    # 13 Bit 偏移
     self.fragment_offset = 0
 
     # 1 Byte time to live
@@ -57,6 +63,7 @@ class IpHeader(object):
                       '%stos: %x' % (indent, self.tos),
                       '%stotal_length: %d' % (indent, self.total_length),
                       '%suid: %d' % (indent, self.uid),
+                      '%sfragment_flag: %d' % (indent, self.fragment_flag),
                       '%sfragment_offset: %d' % (indent, self.fragment_offset),
                       '%sttl: %d' % (indent, self.ttl),
                       '%sprotocol: %d' % (indent, self.protocol),
@@ -74,8 +81,11 @@ class IpHeader(object):
       print 'ip header length: %d, buff_length: %d' % (self.header_length, len(buff))
       return
 
-    _, self.tos, self.total_length, self.uid, self.fragment_offset, self.ttl, self.protocol, self.header_check = \
+    _, self.tos, self.total_length, self.uid, fragment, self.ttl, self.protocol, self.header_check = \
         struct.unpack('>BBHHHBBH', buff[:12])
+
+    self.fragment_flag = fragment >> 13
+    self.fragment_offset = fragment & ((1 << 14) - 1)
 
     self.saddr = socket.inet_ntoa(buffer(buff, 12, 4))
     self.daddr = socket.inet_ntoa(buffer(buff, 16, 4))
