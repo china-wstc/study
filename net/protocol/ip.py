@@ -54,6 +54,9 @@ class IpHeader(object):
     # 4 Byte Destination ip addr
     self.daddr = 0
 
+    # raw datas
+    self.data = ''
+
 
   def __str__(self):
     indent = '  '
@@ -89,6 +92,30 @@ class IpHeader(object):
 
     self.saddr = socket.inet_ntoa(buffer(buff, 12, 4))
     self.daddr = socket.inet_ntoa(buffer(buff, 16, 4))
+
+    self.data = buff[20:]
     return True
+
+class Udp(object):
+  def __init__(self):
+    self.src_port = 0
+    self.dest_port = 0
+    self.udp_length = 0
+    self.udp_checksum = 0
+    self.data = ''
+
+  def __str__(self):
+    indent = '  '
+    return '\n'.join(('Udp {',
+                      '%ssrc_port: %d' % (indent, self.src_port),
+                      '%sdest_port: %d' % (indent, self.dest_port),
+                      '%slength: %d' % (indent, self.udp_length),
+                      '%schecksum: %x' % (indent, self.udp_checksum),
+                      '}'))
+
+  def unpack(self, buff):
+    self.src_port, self.dest_port, self.udp_length, self.udp_checksum = \
+        struct.unpack('>HHHH', buff[:8])
+    self.data = buff[8:]
 
 

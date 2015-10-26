@@ -12,13 +12,22 @@ def ListenIp():
   sock = socket.socket(socket.AF_PACKET, socket.SOCK_RAW)
   sock.bind(("eth0", 0x0800))
 
-  global ARP_TABLE
   while True:
     buff = sock.recv(2048)
-    eth, arp = protocol.EtherHeader(), protocol.ArpProtocol()
-
+    eth = protocol.EtherHeader()
     eth.unpack(buff[: 14])
+
+    ip = protocol.IpHeader()
+    ip.unpack(buff[14: ])
+    if ip.protocol != ip.IP_PROTOCOL_UDP:
+      continue
+
+    udp = protocol.Udp()
+
+    udp.unpack(ip.data)
     print eth
+    print ip
+    print udp
   return
 
 def Runingbg(func, *args, **kwargs):
