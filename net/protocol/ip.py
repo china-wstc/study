@@ -6,6 +6,7 @@ netinet/ip.h
 
 import struct
 import socket
+import _utils
 
 class IpHeader(object):
 
@@ -93,7 +94,7 @@ class IpHeader(object):
     self.saddr = socket.inet_ntoa(buffer(buff, 12, 4))
     self.daddr = socket.inet_ntoa(buffer(buff, 16, 4))
 
-    self.data = buff[20:]
+    self.data = buff[20: self.total_length]
     return True
 
 class Udp(object):
@@ -112,6 +113,11 @@ class Udp(object):
                       '%slength: %d' % (indent, self.udp_length),
                       '%schecksum: %x' % (indent, self.udp_checksum),
                       '}'))
+
+  @staticmethod
+  def CheckSum(ipHeader, udpData):
+    vHeader = struct.pack('!4s4sBBH', socket.inet_aton(ipHeader.saddr), socket.inet_aton(ipHeader.daddr), 0, 17, len(udpData))
+    return _utils.CheckSum(vHeader + udpData)
 
   def unpack(self, buff):
     self.src_port, self.dest_port, self.udp_length, self.udp_checksum = \

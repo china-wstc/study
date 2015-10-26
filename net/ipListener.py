@@ -24,9 +24,12 @@ def ListenIp():
 
     udp = protocol.Udp()
 
-    udp.unpack(ip.data)
     print eth
     print ip
+
+    print hex(udp.CheckSum(ip, ip.data))
+
+    udp.unpack(ip.data)
     print udp
   return
 
